@@ -1,0 +1,16 @@
+env: local
+
+# Enable dangerous options for local testing
+syncPolicy:
+  automated:
+    prune: true
+    allowEmpty: true
+    selfHeal: true
+
+helm:
+  chartReleasesByNamespace:
+    test-ns:
+      test-nginx:
+        registry: registry-1.docker.io/bitnamicharts
+        chart: nginx
+        version: 18.3.1

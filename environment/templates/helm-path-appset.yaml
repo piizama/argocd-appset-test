@@ -1,0 +1,53 @@
+{{- if .Values.helm.pathReleasesByNamespace }}
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {{ printf "helm-chart-appset-%s" .Release.Name | quote }}
+  namespace: argocd
+  labels:
+    env: {{ .Values.env }}
+    {{- range $labelKey, $labelValue := .Values.labels }}
+    {{ $labelKey }}: {{ $labelValue | quote }}
+    {{- end }}
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          {{- range $namespace, $helmReleasesByNamespace := .Values.helm.pathReleasesByNamespace }}
+          {{- range $name, $values := $helmReleasesByNamespace }}
+          - appName: {{ $name }}
+            namespace: {{ $namespace }}
+            repoURL: {{ $values.repository }}
+            path: {{ $values.path }}
+            targetRevision: {{ $values.targetRevision }}
+            releaseName: {{ default (printf "%s-%s" $namespace $name) $values.releaseName }}
+          {{- end }}
+          {{- end }}
+  template:
+    metadata:
+      name: "{{ "{{" }} .namespace {{ "}}" }}-{{ "{{" }} .appName {{ "}}" }}"
+    spec:
+      project: {{ .Values.project }}
+      sources:
+        - repoURL: "{{ "{{" }} .repoURL {{ "}}" }}"
+          path: "{{ "{{" }} .path {{ "}}" }}"
+          targetRevision: "{{ "{{" }} .targetRevision {{ "}}" }}"
+          helm:
+            ignoreMissingValueFiles: true
+            releaseName: "{{ "{{" }} .releaseName {{ "}}" }}"
+            valueFiles:
+              {{- /*  Set common values files before env specific ones so that the later have precedence over the former */}}
+              - "$repoRootPath/helm/{{ "{{" }} .namespace {{ "}}" }}/{{ "{{" }} .appName {{ "}}" }}/values.yaml"
+              - "$repoRootPath/helm/{{ "{{" }} .namespace {{ "}}" }}/{{ "{{" }} .appName {{ "}}" }}/values-{{ .Values.env }}.yaml"
+        {{- /* See https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/#helm-value-files-from-external-git-repository*/}}
+        - repoURL: {{ .Values.helm.valueFilesRepoURL }}
+          targetRevision: {{ .Values.helm.valueFilesRepoTargetRevision }}
+          ref: repoRootPath
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ "{{" }} .namespace {{ "}}" }}"
+      syncPolicy:
+{{- toYaml .Values.syncPolicy | nindent 8 }}
+{{- end }}

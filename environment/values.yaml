@@ -1,0 +1,14 @@
+project: default
+syncPolicy:
+  syncOptions:
+    - CreateNamespace=true
+    - ApplyOutOfSyncOnly=true
+    - FailOnSharedResource=true
+labels:
+  owner: devops
+
+helm:
+  valueFilesRepoURL: "https://github.com/piizama/argocd-appset-test.git"
+  valueFilesRepoTargetRevision: HEAD
+  chartReleasesByNamespace: {}
+  pathReleasesByNamespace: {}

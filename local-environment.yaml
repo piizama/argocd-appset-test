@@ -1,0 +1,19 @@
+# Parent Application for the dev environment
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-env
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/piizama/argocd-appset-test.git
+    path: environment
+    targetRevision: HEAD
+    helm:
+      valueFiles:
+        - "values.yaml"
+        - "values-local.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd

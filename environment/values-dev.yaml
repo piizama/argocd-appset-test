@@ -1,0 +1,21 @@
+env: dev
+
+helm:
+  chartReleasesByNamespace:
+    ns1:
+      nginx:
+        registry: registry-1.docker.io/bitnamicharts
+        chart: nginx
+        version: 18.3.1
+        # Optional parameter
+        releaseName: custom-nginx
+  pathReleasesByNamespace:
+    ns2:
+      ext-nginx:
+        repository: https://github.com/bitnami/charts.git
+        path: "bitnami/nginx"
+        targetRevision: "nginx/18.3.1"
+      int-nginx:
+        repository: https://github.com/piizama/argocd-appset-test.git
+        path: helm/ns2/int-nginx
+        targetRevision: HEAD
